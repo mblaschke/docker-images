@@ -9,10 +9,12 @@ RUN BUILD_DEPS="make gcc g++ libc6-dev ruby-dev libffi-dev" \
                      ca-certificates \
                      libjemalloc1 \
                      ruby \
-    &&  gem install \
-        fluent-plugin-redis-store \
-        fluent-plugin-add-uuid \
-        fluent-plugin-record-modifier \
+    && gem install specific_install \
+       gem specific_install -l https://github.com/mblaschke/fluent-plugin-kubernetes_metadata_filter.git \
+    && gem install \
+       fluent-plugin-redis-store \
+       fluent-plugin-add-uuid \
+       fluent-plugin-record-modifier \
     && apt-get purge -y --auto-remove \
                      -o APT::AutoRemove::RecommendsImportant=false \
                      $BUILD_DEPS \
