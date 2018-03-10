@@ -12,7 +12,7 @@ RUN BUILD_DEPS="make gcc g++ libc6-dev ruby-dev libffi-dev" \
     &&  gem install \
         fluent-plugin-redis-store \
         fluent-plugin-add-uuid \
-        fluent-plugin-record-modifier
+        fluent-plugin-record-modifier \
     && apt-get purge -y --auto-remove \
                      -o APT::AutoRemove::RecommendsImportant=false \
                      $BUILD_DEPS \
