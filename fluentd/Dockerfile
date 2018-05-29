@@ -24,7 +24,7 @@ RUN BUILD_DEPS="make gcc g++ libc6-dev ruby-dev libffi-dev git" \
     && gem uninstall fluent-plugin-kubernetes_metadata_filter \
     && gem uninstall fluent-plugin-elasticsearch \
     && gem install specific_install \
-    && gem specific_install https://github.com/mblaschke/fluent-plugin-kubernetes_metadata_filter.git docker-meta \
+    && gem specific_install https://github.com/fabric8io/fluent-plugin-kubernetes_metadata_filter.git docker-meta \
     && apt-get purge -y --auto-remove \
                      -o APT::AutoRemove::RecommendsImportant=false \
                      $BUILD_DEPS \
