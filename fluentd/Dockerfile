@@ -1,33 +1,34 @@
-FROM gcr.io/google-containers/fluentd-elasticsearch:v2.0.4
+FROM fluent/fluentd:v1.2-debian
 
-RUN echo "gem 'fluent-plugin-redis-store', '>=0.2.0'" >> /Gemfile \
-    && echo "gem 'fluent-plugin-add-uuid', '>=0.1.0'" >> /Gemfile \
-    && echo "gem 'fluent-plugin-record-modifier', '>=1.0.0'" >> /Gemfile \
-    && sed -i '/fluent-plugin-kubernetes_metadata_filter/d' /Gemfile \
-    && sed -i '/fluent-plugin-elasticsearch/d' /Gemfile
+RUN apt update \
+    && apt install -y \
+        ruby-dev \
+        wget \
+        gnupg \
+        build-essential \
+    && apt install -y \
+        libsystemd0 \
+    && gem install fluent-plugin-systemd \
+    && gem install fluent-plugin-redis-store \
+    && gem install fluent-plugin-add-uuid \
+    && gem install fluent-plugin-record-modifier \
+    && gem install fluent-plugin-detect-exceptions \
+    && gem install fluent-plugin-prometheus \
+    && gem install fluent-plugin-kubernetes_metadata_filter \
+    && gem install fluent-plugin-multi-format-parser \
+    && apt purge -y \
+        ruby-dev \
+        wget \
+        gnupg \
+        build-essential \
+    && apt autoremove -y \
+    && apt autoclean -y
 
-# 1. Install & configure dependencies.
-# 2. Install fluentd via ruby.
-# 3. Remove build dependencies.
-# 4. Cleanup leftover caches & files.
-RUN BUILD_DEPS="make gcc g++ libc6-dev ruby-dev libffi-dev git" \
-    && clean-install $BUILD_DEPS \
-                     ca-certificates \
-                     libjemalloc1 \
-                     ruby \
-    && echo 'gem: --no-document' >> /etc/gemrc \
-#    && gem uninstall fluent-plugin-kubernetes_metadata_filter \
-#    && gem uninstall fluent-plugin-kubernetes_metadata_filter \
-#    && gem uninstall fluent-plugin-elasticsearch \
-#    && gem uninstall fluent-plugin-elasticsearch \
-    && gem install --file Gemfile \
-    && gem uninstall fluent-plugin-kubernetes_metadata_filter \
-    && gem uninstall fluent-plugin-elasticsearch \
-    && gem install specific_install \
-    && gem specific_install https://github.com/fabric8io/fluent-plugin-kubernetes_metadata_filter.git docker-meta \
-    && apt-get purge -y --auto-remove \
-                     -o APT::AutoRemove::RecommendsImportant=false \
-                     $BUILD_DEPS \
-    && clean-apt \
-    # Ensure fluent has enough file descriptors
-    && ulimit -n 65536
+RUN usermod -a -G adm root \
+    && find /usr/lib/ruby/gems /var/lib/gems/ -type f -print0 | xargs -0 chmod goa+r
+
+USER 0
+COPY entrypoint.sh /bin/
+RUN chmod +x /bin/entrypoint.sh
+ENTRYPOINT ["/bin/entrypoint.sh"]
+CMD fluentd -c /fluentd/etc/${FLUENTD_CONF} -p /fluentd/plugins $FLUENTD_OPT
